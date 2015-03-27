@@ -34,11 +34,21 @@ namespace Sass {
   {
     Sass_Value* v = sass_make_map(m->length());
     int i = 0;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto key : m->keys()) {
       sass_map_set_key(v, i, key->perform(this));
       sass_map_set_value(v, i, m->at(key)->perform(this));
       i++;
     }
+#else
+    vector<Sass::Expression*>::const_iterator it = m->keys().begin();
+    while(it != m->keys().end()) {
+      Sass::Expression* key = *it; ++it;
+      sass_map_set_key(v, i, key->perform(this));
+      sass_map_set_value(v, i, m->at(key)->perform(this));
+      i++;
+    }
+#endif
     return v;
   }
 

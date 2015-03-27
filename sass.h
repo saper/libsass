@@ -32,9 +32,7 @@
 
 #endif
 
-#ifndef LIBSASS_VERSION
-#define LIBSASS_VERSION "[NA]"
-#endif
+#define LIBSASS_VERSION "3.2.0-beta.2-25-g5fa0-dirty"
 
 // include API headers
 #include "sass_values.h"

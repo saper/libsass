@@ -238,7 +238,12 @@ extern "C" {
       string msg_prefix("Error: ");
       bool got_newline = false;
       msg_stream << msg_prefix;
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (char chr : e.message) {
+#else
+      for (size_t i = 0; i < e.message.size(); i++) { 
+	    char chr = e.message[i];
+#endif
         if (chr == '\n') {
           got_newline = true;
         } else if (got_newline) {

@@ -25,7 +25,6 @@ CXX11_RANGELOOP
 CXX11_NULLPTR
 CXX11_RANDOM
 CXX11_UNORDERED_MAP
-CXX11_ATOMIC
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T

@@ -332,7 +332,13 @@ namespace Sass {
     if (map->is_invisible()) return;
     bool items_output = false;
     append_string("(");
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto key : map->keys()) {
+#else
+    vector<Sass::Expression*>::const_iterator it = map->keys().begin();
+    while(it != map->keys().end()) {
+      Sass::Expression* key = *it; ++it;
+#endif
       if (key->is_invisible()) continue;
       if (map->at(key)->is_invisible()) continue;
       if (items_output) append_comma_separator();

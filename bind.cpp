@@ -91,7 +91,13 @@ namespace Sass {
       } else if (a->is_keyword_argument()) {
         Map* argmap = static_cast<Map*>(a->value());
 
+#ifdef HAVE_CXX11_RANGE_LOOP
         for (auto key : argmap->keys()) {
+#else
+        vector<Sass::Expression*>::const_iterator it = argmap->keys().begin();
+        while(it != argmap->keys().end()) {
+          Sass::Expression* key = *it; ++it;
+#endif
           string name = "$" + unquote(static_cast<String_Constant*>(key)->value());
 
           if (!param_map.count(name)) {

@@ -16,6 +16,9 @@
 #include "context.hpp"
 #include "utf8_string.hpp"
 #include "sass2scss.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -226,7 +229,12 @@ namespace Sass {
         }
         // (3) underscore + given + extension
         if (!contents) {
+#ifdef HAVE_CXX11_RANGE_LOOP
           for(auto ext : exts) {
+#else
+          for(size_t i = 0; i < exts.size(); i++) {
+		    string ext = exts[i];
+#endif
             test_path = dir + "_" + base + ext;
             if ((contents = read_file(test_path))) {
               real_path = test_path;
@@ -236,7 +244,12 @@ namespace Sass {
         }
         // (4) given + extension
         if (!contents) {
+#ifdef HAVE_CXX11_RANGE_LOOP
           for(auto ext : exts) {
+#else
+          for(size_t i = 0; i < exts.size(); i++) {
+		    string ext = exts[i];
+#endif
             test_path = dir + base + ext;
             if ((contents = read_file(test_path))) {
               real_path = test_path;

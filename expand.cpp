@@ -9,6 +9,9 @@
 #include "backtrace.hpp"
 #include "context.hpp"
 #include "parser.hpp"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 namespace Sass {
 
@@ -343,7 +346,13 @@ namespace Sass {
     Block* body = e->block();
 
     if (map) {
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (auto key : map->keys()) {
+#else
+      vector<Sass::Expression*>::const_iterator it = map->keys().begin();
+      while(it != map->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+#endif
         Expression* k = key->perform(eval->with(env, backtrace));
         Expression* v = map->at(key)->perform(eval->with(env, backtrace));
 

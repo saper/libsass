@@ -101,9 +101,17 @@ namespace Sass {
       plugins.load_plugins(plugin_paths[i]);
     }
 
+#ifdef HAVE_CXX11_RANGE_LOOP
     for(auto fn : plugins.get_functions()) {
       c_functions.push_back(fn);
     }
+#else
+    vector<Sass_C_Function_Callback>::const_iterator it = plugins.get_functions().begin();
+	while(it != plugins.get_functions().end()) {
+	  Sass_C_Function_Callback fn= *it; ++it;
+      c_functions.push_back(fn);
+	}
+#endif
 
     string entry_point = initializers.entry_point();
     if (!entry_point.empty()) {

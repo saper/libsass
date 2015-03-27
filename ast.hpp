@@ -9,7 +9,14 @@
 #include <iostream>
 #include <typeinfo>
 #include <algorithm>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_CXX_ONLY_TR1_UNORDERED_MAP
+#include <tr1/unordered_map>
+#else
 #include <unordered_map>
+#endif
 
 #ifdef __clang__
 
@@ -158,7 +165,11 @@ namespace Sass {
     virtual void adjust_after_pushing(T element) { }
   public:
     Vectorized(size_t s = 0) : elements_(vector<T>())
+#ifdef HAVE_CXX_ONLY_TR1_UNORDERED_MAP
+    { }
+#else
     { elements_.reserve(s); }
+#endif
     virtual ~Vectorized() = 0;
     size_t length() const   { return elements_.size(); }
     bool empty() const      { return elements_.empty(); }
@@ -195,7 +206,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////////
   class Hashed {
   private:
+#ifdef HAVE_CXX_ONLY_TR1_UNORDERED_MAP
+    tr1::unordered_map<Expression*, Expression*> elements_;
+#else
     unordered_map<Expression*, Expression*> elements_;
+#endif
     vector<Expression*> list_;
   protected:
     size_t hash_;
@@ -204,8 +219,13 @@ namespace Sass {
     void reset_duplicate_key() { duplicate_key_ = 0; }
     virtual void adjust_after_pushing(std::pair<Expression*, Expression*> p) { }
   public:
+#ifdef HAVE_CXX_ONLY_TR1_UNORDERED_MAP
+    Hashed(size_t s = 0) : elements_(tr1::unordered_map<Expression*, Expression*>(s)), list_(vector<Expression*>())
+    { reset_duplicate_key(); }
+#else
     Hashed(size_t s = 0) : elements_(unordered_map<Expression*, Expression*>(s)), list_(vector<Expression*>())
     { elements_.reserve(s); list_.reserve(s); reset_duplicate_key(); }
+#endif
     virtual ~Hashed();
     size_t length() const                  { return list_.size(); }
     bool empty() const                     { return list_.empty(); }
@@ -233,14 +253,27 @@ namespace Sass {
         return *this;
       }
 
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (auto key : h->keys()) {
         *this << make_pair(key, h->at(key));
       }
+#else
+      vector<Sass::Expression*>::const_iterator it = h->keys(
+).begin();
+      while(it != h->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+        *this << make_pair(key, h->at(key));
+      }
+#endif
 
       reset_duplicate_key();
       return *this;
     }
+#ifdef HAVE_CXX_ONLY_TR1_UNORDERED_MAP
+    const tr1::unordered_map<Expression*, Expression*>& pairs() const { return elements_; }
+#else
     const unordered_map<Expression*, Expression*>& pairs() const { return elements_; }
+#endif
     const vector<Expression*>& keys() const { return list_; }
   };
   inline Hashed::~Hashed() { }
@@ -803,8 +836,17 @@ namespace Sass {
       {
         Map& m = dynamic_cast<Map&>(rhs);
         if (!(m && length() == m.length())) return false;
-        for (auto key : keys())
+#ifdef HAVE_CXX11_RANGE_LOOP
+        for (auto key : keys()) {
           if (!(*at(key) == *m.at(key))) return false;
+        }
+#else
+        vector<Sass::Expression*>::const_iterator it = keys().begin();
+        while(it != keys().end()) {
+          Sass::Expression* key = *it; ++it;
+          if (!(*at(key) == *m.at(key))) return false;
+        }
+#endif
         return true;
       }
       catch (std::bad_cast&)
@@ -818,8 +860,17 @@ namespace Sass {
     {
       if (hash_ > 0) return hash_;
 
-      for (auto key : keys())
+#ifdef HAVE_CXX11_RANGE_LOOP
+      for (auto key : keys()) {
         hash_ ^= key->hash() ^ at(key)->hash();
+      }
+#else
+      vector<Sass::Expression*>::const_iterator it = keys().begin();
+      while(it != keys().end()) {
+        Sass::Expression* key = *it; ++it;
+        hash_ ^= key->hash() ^ at(key)->hash();
+      }
+#endif
 
       return hash_;
     }
@@ -1005,8 +1056,17 @@ namespace Sass {
       if (hash_ > 0) return hash_;
 
       hash_ = std::hash<string>()(name());
-      for (auto argument : arguments()->elements())
+#ifdef HAVE_CXX11_RANGE_LOOP
+      for (auto argument : arguments()->elements()) { 
         hash_ ^= argument->hash();
+      }
+#else
+      vector<Sass::Argument*>::const_iterator it = arguments()->elements().begin();
+      while(it != arguments()->elements().end()) {
+        Sass::Argument* argument = *it; ++it;
+        hash_ ^= argument->hash();
+      }
+#endif
 
       return hash_;
     }
@@ -1374,8 +1434,17 @@ namespace Sass {
     {
       if (hash_ > 0) return hash_;
 
-      for (auto string : elements())
+#ifdef HAVE_CXX11_RANGE_LOOP
+      for (auto string : elements()) {
         hash_ ^= string->hash();
+      }
+#else
+      vector<Sass::Expression*>::const_iterator it = elements().begin();
+      while(it != elements().end()) {
+        Sass::Expression* string = *it; ++it;
+        hash_ ^= string->hash();
+      }
+#endif
 
       return hash_;
     }

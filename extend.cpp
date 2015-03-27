@@ -1675,7 +1675,13 @@ namespace Sass {
 
       if (pHead) {
         SubsetMapEntries entries = subsetMap.get_v(pHead->to_str_vec());
+#ifdef HAVE_CXX11_RANGE_LOOP
         for (ExtensionPair ext : entries) {
+#else
+        vector<ExtensionPair>::const_iterator it = entries.begin();
+		while(it != entries.end()) {
+		  ExtensionPair ext = *it; ++it;
+#endif
           // check if both selectors have the same media block parent
           if (ext.first->media_block() == pComplexSelector->media_block()) continue;
           To_String to_string(&ctx);

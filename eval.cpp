@@ -150,7 +150,13 @@ namespace Sass {
     Expression* val = 0;
 
     if (map) {
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (auto key : map->keys()) {
+#else
+      vector<Sass::Expression*>::const_iterator it = map->keys().begin();
+      while(it != map->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+#endif
         Expression* value = map->at(key);
 
         if (variables.size() == 1) {
@@ -319,9 +325,17 @@ namespace Sass {
     if (m->is_expanded()) return m;
     Map* mm = new (ctx.mem) Map(m->pstate(),
                                   m->length());
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto key : m->keys()) {
       *mm << std::make_pair(key->perform(this), m->at(key)->perform(this));
     }
+#else
+    vector<Sass::Expression*>::const_iterator it = m->keys().begin();
+    while(it != m->keys().end()) {
+      Sass::Expression* key = *it; ++it;
+      *mm << std::make_pair(key->perform(this), m->at(key)->perform(this));
+    }
+#endif
     mm->is_expanded(true);
     return mm;
   }
@@ -743,8 +757,16 @@ namespace Sass {
       return evacuate_escapes(str_constant->value());
     } else if (String_Schema* str_schema = dynamic_cast<String_Schema*>(s)) {
       string res = "";
+#ifdef HAVE_CXX11_RANGE_LOOP	  
       for(auto i : str_schema->elements())
         res += (interpolation(i));
+#else
+      vector<Expression *>::const_iterator it = str_schema->elements().begin();
+	  while(it != str_schema->elements().end()) {
+	  	Expression *i = *it; ++it;
+        res += (interpolation(i));
+	  }
+#endif
       //ToDo: do this in one step
       auto esc = evacuate_escapes(res);
       auto unq = unquote(esc);
@@ -758,7 +780,13 @@ namespace Sass {
       string sep = list->separator() == List::Separator::COMMA ? "," : " ";
       if (ctx.output_style != COMPRESSED && sep == ",") sep += " ";
       bool initial = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
       for(auto item : list->elements()) {
+#else
+      vector<Expression *>::const_iterator it = list->elements().begin();
+	  while(it != list->elements().end()) {
+	  	Expression *item = *it; ++it;
+#endif
         if (initial) acc += sep;
         acc += interpolation(item);
         initial = true;
@@ -995,8 +1023,16 @@ namespace Sass {
         Map* l = static_cast<Map*>(lhs);
         Map* r = static_cast<Map*>(rhs);
         if (l->length() != r->length()) return false;
+#ifdef HAVE_CXX11_RANGE_LOOP
         for (auto key : l->keys())
           if (!eq(l->at(key), r->at(key), ctx)) return false;
+#else
+        vector<Sass::Expression*>::const_iterator it = r->keys().begin();
+        while(it != r->keys().end()) {
+          Sass::Expression* key = *it; ++it;
+          if (!eq(l->at(key), r->at(key), ctx)) return false;
+        }
+#endif
         return true;
       } break;
       case Expression::NULL_VAL: {

@@ -18,7 +18,16 @@
 #include <string>
 #include <iomanip>
 #include <iostream>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_CXX_RANDOM
 #include <random>
+#else
+#ifdef HAVE_CXX_TR1_RANDOM
+#include <tr1/random>
+#endif
+#endif
 #include <set>
 
 #ifdef __MINGW32__
@@ -1066,13 +1075,26 @@ namespace Sass {
       Number* l = dynamic_cast<Number*>(env["$limit"]);
       if (l && trunc(l->value()) != l->value()) error("argument $limit of `" + string(sig) + "` must be an integer", pstate);
       if (l) {
+#ifndef HAVE_CXX_ONLY_TR1_RANDOM
         uniform_real_distribution<> distributor(1, l->value() + 1);
         uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
         return new (ctx.mem) Number(pstate, (double)distributed);
+#else
+        uniform_real<double> distributor(1, l->value() + 1);
+        variate_generator <std::mt19937, std::uniform_real<double> > gen(rand, distributor);
+        uint_fast32_t distributed = gen();
+        return new (ctx.mem) Number(path, position, distributed);
+#endif
       }
       else {
+#ifndef HAVE_CXX_ONLY_TR1_RANDOM
         uniform_real_distribution<> distributor(0, 1);
         uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
+#else
+        uniform_real<> distributor(0, 1);
+        variate_generator <std::mt19937, std::uniform_real<double> > gen(rand, distributor);
+        uint_fast32_t distributed = gen();
+#endif
         return new (ctx.mem) Number(pstate, trunc(distributed));
      }
     }
@@ -1286,9 +1308,17 @@ namespace Sass {
     {
       Map* m = ARGM("$map", Map, ctx);
       List* result = new (ctx.mem) List(pstate, m->length(), List::COMMA);
+#ifdef HAVE_CXX11_RANGE_LOOP
       for ( auto key : m->keys()) {
         *result << key;
       }
+#else
+      vector<Sass::Expression*>::const_iterator it = m->keys().begin();
+      while(it != m->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+        *result << key;
+      }
+#endif
       return result;
     }
 
@@ -1297,9 +1327,17 @@ namespace Sass {
     {
       Map* m = ARGM("$map", Map, ctx);
       List* result = new (ctx.mem) List(pstate, m->length(), List::COMMA);
+#ifdef HAVE_CXX11_RANGE_LOOP
       for ( auto key : m->keys()) {
         *result << m->at(key);
       }
+#else
+      vector<Sass::Expression*>::const_iterator it = m->keys().begin();
+      while(it != m->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+        *result << m->at(key);
+      }
+#endif
       return result;
     }
 
@@ -1323,7 +1361,13 @@ namespace Sass {
       Map* m = ARGM("$map", Map, ctx);
       List* arglist = ARG("$keys", List);
       Map* result = new (ctx.mem) Map(pstate, 1);
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (auto key : m->keys()) {
+#else
+      vector<Sass::Expression*>::const_iterator it = m->keys().begin();
+      while(it != m->keys().end()) {
+        Sass::Expression* key = *it; ++it;
+#endif
         remove = false;
         for (size_t j = 0, K = arglist->length(); j < K && !remove; ++j) {
           remove = eq(key, arglist->value_at_index(j), ctx);
@@ -1537,12 +1581,23 @@ namespace Sass {
       // return v;
     }
 
+#ifdef HAVE_CXX_ONLY_TR1_RANDOM
+    std::stringstream ss;
+    uniform_real<> distributor(0, 4294967296); // 16^8
+    variate_generator <std::mt19937, std::uniform_real<double> > gen(rand, di
+stributor);
+#endif
+
     Signature unique_id_sig = "unique-id()";
     BUILT_IN(unique_id)
     {
+#ifndef HAVE_CXX_ONLY_TR1_RANDOM
       std::stringstream ss;
       uniform_real_distribution<> distributor(0, 4294967296); // 16^8
       uint_fast32_t distributed = static_cast<uint_fast32_t>(distributor(rand));
+#else
+      uint_fast32_t distributed = gen();
+#endif
       ss << "u" << setfill('0') << setw(8) << std::hex << distributed;
       return new (ctx.mem) String_Constant(pstate, ss.str());
     }

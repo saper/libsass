@@ -49,7 +49,12 @@ namespace Sass {
   string string_escape(const string& str)
   {
     string out("");
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       // escape some characters
       if (i == '"') out += '\\';
       if (i == '\'') out += '\\';
@@ -65,7 +70,12 @@ namespace Sass {
   {
     string out("");
     bool esc = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (esc || i != '\\') {
         esc = false;
         out += i;
@@ -84,7 +94,12 @@ namespace Sass {
   {
     string out("");
     bool esc = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (i == '\\') {
         esc = ! esc;
       } else if (esc && i == '\r') {
@@ -109,7 +124,12 @@ namespace Sass {
   {
     string out("");
     bool esc = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (!esc) {
         // ignore next character
         if (i == '\\') esc = true;
@@ -131,7 +151,12 @@ namespace Sass {
   {
     string out("");
     bool esc = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (i == '\\' && !esc) {
         out += '\\';
         out += '\\';
@@ -164,7 +189,12 @@ namespace Sass {
   string string_to_output(const string& str)
   {
     string out("");
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (i == 10) {
         out += ' ';
       } else {
@@ -179,7 +209,12 @@ namespace Sass {
     string str = "";
     size_t has = 0;
     bool clean = false;
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (auto i : text) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (clean) {
         if (i == '\n') { has = 0; }
         else if (i == '\r') { has = 0; }
@@ -209,7 +244,12 @@ namespace Sass {
     bool esc = false;
     char inside_str = 0;
     string text = "";
+#ifdef HAVE_CXX11_RANGE_LOOP
     for(auto i : str) {
+#else
+    for (size_t n = 0; n < str.size(); n++) {
+	  char i = str[n];
+#endif
       if (!esc && i == '\\') {
         esc = true;
         text += i;
@@ -305,7 +345,13 @@ namespace Sass {
 
           // convert the extracted hex string to code point value
           // ToDo: Maybe we could do this without creating a substring
+#ifndef HAVE_CXX11_NULLPTR
+#define	nullptr (char **)0
+#endif
           uint32_t cp = strtol(s.substr (i + 1, len - 1).c_str(), nullptr, 16);
+#ifndef HAVE_CXX11_NULLPTR
+#undef nullptr
+#endif
 
           // assert invalid code points
           if (cp == 0) cp = 0xFFFD;

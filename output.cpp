@@ -53,7 +53,12 @@ namespace Sass {
     }
 
     // search for unicode char
+#ifdef HAVE_CXX11_RANGE_LOOP
     for(const char& chr : wbuf.buffer) {
+#else
+    for(size_t i = 0; i < wbuf.buffer.size(); i++) {
+	  const char& chr = wbuf.buffer[i];
+#endif
       // skip all ascii chars
       if (chr >= 0) continue;
       // declare the charset

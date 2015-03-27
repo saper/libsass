@@ -115,7 +115,13 @@ namespace Sass {
   void SourceMap::prepend(const OutputBuffer& out)
   {
     Offset size(out.smap.current_position);
+#ifdef HAVE_CXX11_RANGE_LOOP
     for (Mapping mapping : out.smap.mappings) {
+#else
+    vector<Mapping>::const_iterator it = out.smap.mappings.begin();
+	while(it != out.smap.mappings.end()) {
+	  Mapping mapping = *it; it++;
+#endif
       if (mapping.generated_position.line > size.line) {
         throw(runtime_error("prepend sourcemap has illegal line"));
       }
@@ -139,7 +145,13 @@ namespace Sass {
   void SourceMap::prepend(const Offset& offset)
   {
     if (offset.line != 0 || offset.column != 0) {
+#ifdef HAVE_CXX11_RANGE_LOOP
       for (Mapping& mapping : mappings) {
+#else
+    vector<Mapping>::const_iterator it = mappings.begin();
+	while(it != mappings.end()) {
+	  Mapping mapping = *it; it++;
+#endif
         // move stuff on the first old line
         if (mapping.generated_position.line == 0) {
           mapping.generated_position.column += offset.column;
