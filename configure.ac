@@ -21,6 +21,11 @@ AC_LANG([C++])
 
 # Checks for header files.
 AC_CHECK_HEADERS([unistd.h])
+CXX11_RANGELOOP
+CXX11_NULLPTR
+CXX11_RANDOM
+CXX11_UNORDERED_MAP
+CXX11_ATOMIC
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
