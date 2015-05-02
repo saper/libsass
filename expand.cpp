@@ -9,6 +9,7 @@
 #include "backtrace.hpp"
 #include "context.hpp"
 #include "parser.hpp"
+#include <stdio.h>
 
 namespace Sass {
 
@@ -283,6 +284,7 @@ namespace Sass {
 
   Statement* Expand::operator()(Import_Stub* i)
   {
+    fprintf(stderr, "Expand::operator(): Appending: %s\n", i->file_name().c_str());
     append_block(ctx.style_sheets[i->file_name()]);
     return 0;
   }

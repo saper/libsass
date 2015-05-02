@@ -11,6 +11,7 @@
 #include "sass_functions.h"
 
 #include <typeinfo>
+#include <stdio.h>
 
 namespace Sass {
   using namespace std;
@@ -80,6 +81,7 @@ namespace Sass {
     lex< optional_spaces >();
     Selector_Lookahead lookahead_result;
     while (position < end) {
+      fprintf(stderr, "Parsing at %p: %s\n", position, position);
       parse_block_comments(root);
       if (peek< kwd_import >()) {
         Import* imp = parse_import();

@@ -30,6 +30,7 @@
 #include "emitter.hpp"
 
 #include <string>
+#include <stdio.h>
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
@@ -319,11 +320,13 @@ namespace Sass {
         0, 0
       );
       import_stack.push_back(import);
+      fprintf(stderr, "Running queue[%zu]: [%s] via parser\n", i, queue[i].source);
       Parser p(Parser::from_c_str(queue[i].source, *this, ParserState(queue[i].abs_path, queue[i].source, i)));
       Block* ast = p.parse();
       sass_delete_import(import_stack.back());
       import_stack.pop_back();
       if (i == 0) root = ast;
+      fprintf(stderr, "Adding to style_sheets: %s\n", queue[i].load_path.c_str());
       style_sheets[queue[i].load_path] = ast;
     }
     if (root == 0) return 0;
