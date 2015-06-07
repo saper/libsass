@@ -65,7 +65,7 @@ namespace Sass {
     // Assert string boundaries (/\Z|\z|\A/)
     // There are zero-width positive lookaheads
     const char* end_of_line(const char* src);
-    // const char* end_of_string(const char* src);
+    const char* end_of_file(const char* src);
     // const char* start_of_string(const char* src);
 
     // Type definition for prelexer functions
@@ -148,28 +148,11 @@ namespace Sass {
       if ((rslt = mx(src))) return rslt;
       return 0;
     }
-    template <const prelexer mx1, const prelexer mx2>
+    template <const prelexer mx1, const prelexer mx2, const prelexer... mxs>
     const char* alternatives(const char* src) {
       const char* rslt;
       if ((rslt = mx1(src))) return rslt;
-      if ((rslt = mx2(src))) return rslt;
-      return 0;
-    }
-    template <const prelexer mx1, const prelexer mx2, const prelexer mx3>
-    const char* alternatives(const char* src) {
-      const char* rslt;
-      if ((rslt = mx1(src))) return rslt;
-      if ((rslt = mx2(src))) return rslt;
-      if ((rslt = mx3(src))) return rslt;
-      return 0;
-    }
-    template <const prelexer mx1, const prelexer mx2, const prelexer mx3, const prelexer mx4, const prelexer... mxs>
-    const char* alternatives(const char* src) {
-      const char* rslt;
-      if ((rslt = mx1(src))) return rslt;
-      if ((rslt = mx2(src))) return rslt;
-      if ((rslt = mx3(src))) return rslt;
-      return alternatives<mx4, mxs...>(src);
+      return alternatives<mx2, mxs...>(src);
     }
 
     // Tries supplied matchers in order.
@@ -181,28 +164,11 @@ namespace Sass {
       if (!(rslt = mx1(rslt))) return 0;
       return rslt;
     }
-    template <const prelexer mx1, const prelexer mx2>
+    template <const prelexer mx1, const prelexer mx2, const prelexer... mxs>
     const char* sequence(const char* src) {
       const char* rslt = src;
       if (!(rslt = mx1(rslt))) return 0;
-      if (!(rslt = mx2(rslt))) return 0;
-      return rslt;
-    }
-    template <const prelexer mx1, const prelexer mx2, const prelexer mx3>
-    const char* sequence(const char* src) {
-      const char* rslt = src;
-      if (!(rslt = mx1(rslt))) return 0;
-      if (!(rslt = mx2(rslt))) return 0;
-      if (!(rslt = mx3(rslt))) return 0;
-      return rslt;
-    }
-    template <const prelexer mx1, const prelexer mx2, const prelexer mx3, const prelexer mx4, const prelexer... mxs>
-    const char* sequence(const char* src) {
-      const char* rslt = src;
-      if (!(rslt = mx1(rslt))) return 0;
-      if (!(rslt = mx2(rslt))) return 0;
-      if (!(rslt = mx3(rslt))) return 0;
-      return sequence<mx4, mxs...>(rslt);
+      return sequence<mx2, mxs...>(rslt);
     }
 
 
