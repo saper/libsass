@@ -469,7 +469,7 @@ namespace Sass {
       rhs = rhs->perform(this);
     }
 
-    // see if it's a relational expression
+    // upgrade string to number if possible (issue #948)
     switch(op_type) {
       case Binary_Expression::EQ:  return new (ctx.mem) Boolean(b->pstate(), eq(lhs, rhs, ctx));
       case Binary_Expression::NEQ: return new (ctx.mem) Boolean(b->pstate(), !eq(lhs, rhs, ctx));
@@ -692,8 +692,8 @@ namespace Sass {
       env = old_env;
     }
 
-    // backtrace = here.parent;
-    // env = old_env;
+    // link back to function definition
+    // only do this for custom functions
 
 
     // link back to function definition
@@ -701,10 +701,8 @@ namespace Sass {
     if (result->pstate().file == string::npos)
       result->pstate(c->pstate());
 
-    do {
-      result->is_delayed(result->concrete_type() == Expression::STRING);
-      result = result->perform(this);
-    } while (result->concrete_type() == Expression::NONE);
+    result->is_delayed(result->concrete_type() == Expression::STRING);
+    if (!result->is_delayed()) result = result->perform(this);
     return result;
   }
 
