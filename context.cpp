@@ -59,6 +59,7 @@ namespace Sass {
     c_compiler              (initializers.c_compiler()),
     source_c_str            (initializers.source_c_str()),
     sources                 (vector<const char*>()),
+    heap_sources            (vector<char*>()),
     plugin_paths            (initializers.plugin_paths()),
     include_paths           (initializers.include_paths()),
     queue                   (vector<Sass_Queued>()),
@@ -148,12 +149,11 @@ namespace Sass {
 
   Context::~Context()
   {
-    // everything that gets put into sources will be freed by us
-    for (size_t n = 0; n < import_stack.size(); ++n) sass_delete_import(import_stack[n]);
     // sources are allocated by strdup or malloc (overtaken from C code)
-    for (size_t i = 0; i < sources.size(); ++i) free((void*)sources[i]);
-    // clear inner structures (vectors)
-    sources.clear(); import_stack.clear();
+    for (size_t i = 0; i < heap_sources.size(); ++i) free(heap_sources[i]);
+    for (size_t m = 0; m < import_stack.size(); ++m) sass_delete_import(import_stack[m]);
+    // clear inner structures (vectors) and input source
+    heap_sources.clear(); sources.clear(); import_stack.clear(); source_c_str = 0;
   }
 
   void Context::setup_color_map()
@@ -245,12 +245,19 @@ namespace Sass {
       }
     }
   }
+
+  void Context::add_heap_source(string load_path, string abs_path, char* contents)
+  {
+    heap_sources.push_back(contents);
+    add_source(load_path, abs_path, contents);
+  }
+
   void Context::add_source(string load_path, string abs_path, const char* contents)
   {
     sources.push_back(contents);
+    emitter.add_source_index(sources.size() - 1);
     included_files.push_back(abs_path);
     queue.push_back(Sass_Queued(load_path, abs_path, contents));
-    emitter.add_source_index(sources.size() - 1);
     include_links.push_back(resolve_relative_path(abs_path, source_map_file, cwd));
   }
 
@@ -262,7 +269,7 @@ namespace Sass {
     string resolved(find_file(path, include_paths));
     if (resolved == "") return resolved;
     if (char* contents = read_file(resolved)) {
-      add_source(path, resolved, contents);
+      add_heap_source(path, resolved, contents);
       style_sheets[path] = 0;
       return path;
     }
@@ -279,7 +286,7 @@ namespace Sass {
     string resolved(resolve_file(base_file));
     if (style_sheets.count(base_file)) return base_file;
     if (char* contents = read_file(resolved)) {
-      add_source(base_file, resolved, contents);
+      add_heap_source(base_file, resolved, contents);
       style_sheets[base_file] = 0;
       return base_file;
     }
@@ -317,8 +324,8 @@ namespace Sass {
         0, 0
       );
       import_stack.push_back(import);
-      const char* path = sass_strdup(queue[i].abs_path.c_str());
-      Parser p(Parser::from_c_str(queue[i].source, *this, ParserState(path, queue[i].source, i)));
+      ParserState pstate(queue[i].abs_path.c_str(), queue[i].source, i);
+      Parser p(Parser::from_c_str(queue[i].source, *this, pstate));
       Block* ast = p.parse();
       sass_delete_import(import_stack.back());
       import_stack.pop_back();
@@ -368,8 +375,7 @@ namespace Sass {
     queue.clear();
     if(is_indented_syntax_src) {
       char * contents = sass2scss(source_c_str, SASS2SCSS_PRETTIFY_1 | SASS2SCSS_KEEP_COMMENT);
-      add_source(input_path, input_path, contents);
-      delete [] source_c_str;
+      add_heap_source(input_path, input_path, contents);
       return parse_file();
     }
     add_source(input_path, input_path, source_c_str);

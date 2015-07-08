@@ -40,8 +40,9 @@ namespace Sass {
     const char* source_c_str;
 
     // c-strs containing Sass file contents
-    // we will overtake ownership of memory
     vector<const char*> sources;
+    // ... we own this memory:
+    vector<char*> heap_sources;
     // absolute paths to includes
     vector<string> included_files;
     // relative links to includes
@@ -117,6 +118,7 @@ namespace Sass {
 
     Block* parse_file();
     Block* parse_string();
+    void add_heap_source(string, string, char*);
     void add_source(string, string, const char*);
 
     string add_file(const string& file);

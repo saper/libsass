@@ -45,12 +45,12 @@ extern "C" {
 
   // External import entry
   struct Sass_Import {
-    char* path;
-    char* base;
-    char* source;
-    char* srcmap;
+    const char* path;
+    const char* base;
+    const char* source;
+    const char* srcmap;
     // error handling
-    char* error;
+    const char* error;
     size_t line;
     size_t column;
   };
@@ -103,8 +103,8 @@ extern "C" {
   {
     Sass_Import* v = (Sass_Import*) calloc(1, sizeof(Sass_Import));
     if (v == 0) return 0;
-    v->path = path ? sass_strdup(path) : 0;
-    v->base = base ? sass_strdup(base) : 0;
+    v->path = path;
+    v->base = base;
     v->source = source;
     v->srcmap = srcmap;
     v->error = 0;
@@ -123,8 +123,7 @@ extern "C" {
   Sass_Import_Entry ADDCALL sass_import_set_error(Sass_Import_Entry import, const char* error, size_t line, size_t col)
   {
     if (import == 0) return 0;
-    if (import->error) free(import->error);
-    import->error = error ? sass_strdup(error) : 0;
+    import->error = error;
     import->line = line ? line : -1;
     import->column = col ? col : -1;
     return import;
@@ -149,11 +148,6 @@ extern "C" {
   // Just in case we have some stray import structs
   void ADDCALL sass_delete_import(Sass_Import_Entry import)
   {
-    free(import->path);
-    free(import->base);
-    free(import->source);
-    free(import->srcmap);
-    free(import->error);
     free(import);
   }
 
@@ -170,7 +164,7 @@ extern "C" {
 
   // Explicit functions to take ownership of the memory
   // Resets our own property since we do not know if it is still alive
-  char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source; entry->source = 0; return ptr; }
-  char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap; entry->srcmap = 0; return ptr; }
+  char* ADDCALL sass_import_take_source(Sass_Import_Entry entry) { char* ptr = entry->source ? sass_strdup(entry->source) : 0; entry->source = 0; return ptr; }
+  char* ADDCALL sass_import_take_srcmap(Sass_Import_Entry entry) { char* ptr = entry->srcmap ? sass_strdup(entry->srcmap) : 0; entry->srcmap = 0; return ptr; }
 
 }

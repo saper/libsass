@@ -151,7 +151,7 @@ extern "C" {
   struct Sass_Data_Context : Sass_Context {
 
     // provided source string
-    char* source_string;
+    const char* source_string;
 
   };
 
@@ -758,6 +758,7 @@ extern "C" {
     if (ctx->error_file)        free(ctx->error_file);
     if (ctx->input_path)        free(ctx->input_path);
     if (ctx->output_path)       free(ctx->output_path);
+    if (ctx->plugin_path)       free(ctx->plugin_path);
     if (ctx->include_path)      free(ctx->include_path);
     if (ctx->source_map_file)   free(ctx->source_map_file);
     if (ctx->source_map_root)   free(ctx->source_map_root);
@@ -781,16 +782,27 @@ extern "C" {
 
   void ADDCALL sass_delete_compiler (struct Sass_Compiler* compiler)
   {
-    if (compiler == 0) return;
+    if (compiler == 0) {
+      return;
+    }
     Context* cpp_ctx = compiler->cpp_ctx;
     if (cpp_ctx) delete(cpp_ctx);
     compiler->cpp_ctx = 0;
     free(compiler);
   }
 
-  // Deallocate all associated memory with contexts
-  void ADDCALL sass_delete_file_context (struct Sass_File_Context* ctx) { sass_clear_context(ctx); free(ctx); }
-  void ADDCALL sass_delete_data_context (struct Sass_Data_Context* ctx) { sass_clear_context(ctx); free(ctx); }
+  // Deallocate all associated memory with file context
+  void ADDCALL sass_delete_file_context (struct Sass_File_Context* ctx)
+  {
+    // clear the context and free it
+    sass_clear_context(ctx); free(ctx);
+  }
+  // Deallocate all associated memory with data context
+  void ADDCALL sass_delete_data_context (struct Sass_Data_Context* ctx)
+  {
+    // clear the context and free it
+    sass_clear_context(ctx); free(ctx);
+  }
 
   // Getters for sass context from specific implementations
   struct Sass_Context* ADDCALL sass_file_context_get_context(struct Sass_File_Context* ctx) { return ctx; }

@@ -339,7 +339,7 @@ namespace Sass {
         while (*includes) {
           Sass_Import_Entry include = *includes;
           const char *file = sass_import_get_path(include);
-          char* source = sass_import_take_source(include);
+          const char *source = sass_import_get_source(include);
           size_t line = sass_import_get_error_line(include);
           size_t column = sass_import_get_error_column(include);
           const char* message = sass_import_get_error_message(include);
