@@ -13,6 +13,7 @@
     <ReadLinesFromFile File="libsass-version">
       <Output TaskParameter="Lines" PropertyName="LIBSASS_VERSION" />
     </ReadLinesFromFile>
+    <Exec Command="del *-version" />
   </Target>
   <Target Name="VersionMacros">
     <ItemGroup>
